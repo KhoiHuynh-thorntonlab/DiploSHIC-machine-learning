@@ -15,7 +15,7 @@ ValueError: not enough values to unpack (expected 3, got 1)
 
 
 
-The above error gets clear and vector file is generated after a header (fwdpy11 100 10) is added to the file test.txt. The new file with header is call test2.txt./
+The above error gets clear and vector file is generated after a header (fwdpy11 100 10) is added to the file test.txt. I have also tried adding the header to every replicates and still get the same error. The new file with header is call test2.txt.
 The vector file generated using test2.txt sample is test2.txt.diploid.fvec. However, when I try using predict function, I got the following error:
 
 

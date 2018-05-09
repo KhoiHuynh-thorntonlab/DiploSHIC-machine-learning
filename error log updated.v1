@@ -3,7 +3,9 @@ I have added the following line to their respective line in vector file:
 "chrom   classifiedWinStart      classifiedWinEnd        bigWinRange" to statname line (first line)
 "3R      28022501        28027500        28000001-28055000" to each replicate line (2nd line onward)
 
-I still run into the same issue:
+The winstart and winend coordinates are also modified for each line as a test after trying copying the above two lines to the file:
+
+I still run into the same issue regardless:
 
 
 /home/khoih/anaconda3/envs/py36/lib/python3.6/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
@@ -17,3 +19,7 @@ Traceback (most recent call last):
   File "/home/khoih/anaconda3/envs/py36/lib/python3.6/site-packages/numpy/core/fromnumeric.py", line 52, in _wrapfunc
     return getattr(obj, method)(*args, **kwds)
 ValueError: cannot reshape array of size 1280 into shape (10,11,11)
+
+
+
+

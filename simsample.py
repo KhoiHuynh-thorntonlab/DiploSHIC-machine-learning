@@ -36,15 +36,13 @@ if os.path.isfile(args.filename):
     sys.exit(0)
     
 N = 1000
-theta = 1000.0  # float, not int
 
-# KRT:
-# We multiply this by 11
-# because theta corresponds
-# to the middle window out of all 11.
-# We need the recombination rate/window to
-# be constant
-rho = 1000.0*11.0    # float, not int
+#KRT: I changed theta and rho
+#to 1100.  Thus, the value
+#for each window is 100, 
+#which is what you will use for discoal.
+theta = 1100.0  # float, not int
+rho = 1100.0
 
 
 rng = fp11.GSLrng(args.seed)

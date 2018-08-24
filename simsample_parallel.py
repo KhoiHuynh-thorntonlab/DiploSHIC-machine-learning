@@ -99,6 +99,12 @@ if __name__ == "__main__":
     repargs = [(args.mutrate, i, j)
                for i, j in zip(repseeds, range(args.nreps))]
 
+    # delete the pickled pop file if it exists,
+    # which is important b/c we are going to 
+    # use this file in append mode.
+    if os.path.exists(args.filename + '.lzma'):
+        os.remove(args.filename + '.lzma')
+
     with concurrent.futures.ProcessPoolExecutor() as pool:
         futures = {pool.submit(runsim, i) for i in repargs}
         for fut in concurrent.futures.as_completed(futures):

@@ -10,6 +10,9 @@ import argparse
 import os
 import random
 import libsequence.polytable
+# KRT: need the windows module to 
+# split up data
+import libsequence.windows
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--mutrate", help="mutrate_s", type=float)
@@ -33,8 +36,13 @@ if os.path.isfile(args.filename):
     sys.exit(0)
     
 N = 1000
-theta = 1000.0  # float, not int
-rho = 1000.0    # float, not int
+
+#KRT: I changed theta and rho
+#to 1100.  Thus, the value
+#for each window is 100, 
+#which is what you will use for discoal.
+theta = 1100.0  # float, not int
+rho = 1100.0
 
 
 rng = fp11.GSLrng(args.seed)
@@ -67,8 +75,47 @@ for rep in range(args.nreps):
     #"r" for reading (default), "w" for overwriting, "x" for exclusive creation, or "a" for appending
 
     with lzma.open(args.filename + ".lzma","ab") as f:
-            pickle.dump(pop,f)
-    s = pop.sample(rng=rng,nsam=2000,separate=False)
+        # KRT: the -1 means latest pickle protocol,
+        # which is best to use for stuff
+        # written in pybind11 like fwdpy11 is:
+        pickle.dump(pop,f,-1)
+
+    # KRT:
+    # This is far too big of a sample size.
+    # You are sampling diploids here.
+    # Thus 25 diploids = 50 chromosomes,
+    # and thus 50 would be the size for discoal.
+    s = pop.sample(rng=rng,nsam=25,separate=False)
+
+    # KRT:
+    # This is the tricky part.
+    # We will break our data up into windows of size "1"
+    # and then step through in sizes of "0.5"
     ms = libsequence.polytable.SimData(s)
-    print(str(ms), file=open(args.filename +".txt","a"))
-    
+    w = libsequence.windows.Windows(ms, window_size = 1.0, step_len=0.5,
+            starting_pos=0.0,ending_pos=11.0)
+
+    left_end = 0.0
+    winlabel = 0
+    for i in range(len(w)):
+        # This is the data for the i-th
+        # window.  It is the same type
+        # of object as w
+        wi = w[i]
+
+        # We need to create a new object,
+        # where the mutation positions are changed
+        # to be on [0,1)
+        newpos = [wi.position(i)-left_end for i in range(wi.numsites())]
+        new_window = libsequence.polytable.SimData(newpos,
+                [wi[i] for i in range(len(wi))])
+
+        # Note opening the file in 'w' mode instead of append!
+        with open(args.filename + ".rep{}.window{}.txt".format(rep,winlabel), "w") as f:
+            # write our NEW window out to the file
+            f.write(str(new_window))
+        # increment the label for the next file name for this replicate
+        winlabel += 1 
+        # increment the left position of the window to
+        # match what is coming next
+        left_end += 0.5

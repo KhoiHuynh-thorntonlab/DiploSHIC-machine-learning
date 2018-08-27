@@ -1,0 +1,23 @@
+First error which is clear by adding random 3 column as header to the sample files:
+
+python makeFeatureVecsForSingleMs_ogSHIC.py /home/khoih/test.rep0.window1.txt 1100000 11 None None all 0.25 0.0 /home/khoih/ /home/khoih/100.txt.haploid.fvec
+/home/khoih/anaconda3/envs/py36/lib/python3.6/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.                                 floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
+  from ._conv import register_converters as _register_converters
+file name='/home/khoih/test.rep0.window1.txt'Traceback (most recent call last):
+  File "makeFeatureVecsForSingleMs_ogSHIC.py", line 25, in <module>
+    trainingDataFileObj, sampleSize, numInstances = openMsOutFileForSequentialReading(trainingDataFileName)
+  File "/home/khoih/diploSHIC/msTools.py", line 139, in openMsOutFileForSequentialReading
+    program,numSamples,numSims = header.strip().split()[:3]
+ValueError: not enough values to unpack (expected 3, got 1)
+
+
+Second error which is clear by create empty line between "segsites" line and "position" line:
+
+python makeFeatureVecsForSingleMs_ogSHIC.py /home/khoih/test.rep0.window1.txt 1100000 11 None None all 0.25 0.0 /home/khoih/ /home/khoih/100.txt.haploid.fvec
+/home/khoih/anaconda3/envs/py36/lib/python3.6/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.                                 floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
+  from ._conv import register_converters as _register_converters
+file name='/home/khoih/test.rep0.window1.txt'maskFileName='None': not doing any masking!
+Malformed ms-style output file 487 segsites but 0 columns in line: ; line 50 of 100 samples AAAARRRRGGHHH!!!!!
+
+Third error:
+

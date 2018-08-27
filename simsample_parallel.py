@@ -38,6 +38,9 @@ def take_sample(rng, pop):
         new_window = libsequence.polytable.SimData(newpos,
                                                    [wi[i] for i in range(len(wi))])
         samples.append((left_end, new_window))
+        # need to update left_end 
+        # to get positions correct
+        left_end += 0.5
     return samples
 
 
@@ -118,5 +121,7 @@ if __name__ == "__main__":
             print("writing samples")
             for i, j in zip(samples, range(len(samples))):
                 with open(args.filename + ".rep{}.window{}.txt".format(repid, j), "w") as f:
+                    # Write a fake discoal header line with fake random number seeds
+                    f.write("discoal 50 1 1000 -t 1000 -r 1000\n1 2 3\n")
                     f.write(str(i[1]))
             print("done writing samples")

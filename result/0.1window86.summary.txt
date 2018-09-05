@@ -1,0 +1,4 @@
+      1 hard
+     35 linkedSoft
+     44 neutral
+     20 soft

@@ -1,0 +1,3 @@
+     31 linkedSoft
+     40 neutral
+     29 soft

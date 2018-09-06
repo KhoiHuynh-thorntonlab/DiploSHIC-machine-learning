@@ -1,0 +1,2 @@
+chrom	classifiedWinStart	classifiedWinEnd	bigWinRange
+3R	28022501	28027500	28000001-28055000

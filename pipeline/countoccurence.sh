@@ -2,6 +2,7 @@
 
 for i in $(seq 0 21);
 do
+	cat /home/khoih/rawdata/test*.window$i.txt > /home/khoih/backup/0.5window$i.txt
 	echo "0.5window$i |" >> /home/khoih/0.5total.summary.txt
 	cut -f 5 /home/khoih/backup/0.5window$i.txt | sort | uniq -c >> /home/khoih/0.5window$i.summary.txt
 	cat /home/khoih/0.5window$i.summary.txt >> /home/khoih/0.5total.summary.txt
@@ -10,6 +11,7 @@ done
 
 for i in $(seq 0 99);
 do
+	cat /home/khoih/test/trial*.window$i.txt > /home/khoih/backup/0.1window$i.txt
 	echo "0.1window$i |" >> /home/khoih/0.1total.summary.txt
 	cut -f 5 /home/khoih/backup/0.1window$i.txt | sort | uniq -c >> /home/khoih/0.1window$i.summary.txt 
 	cat /home/khoih/0.1window$i.summary.txt >> /home/khoih/0.1total.summary.txt

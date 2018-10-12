@@ -9,7 +9,6 @@ import sqlite3
 import pandas as pd
 import concurrent.futures
 import sys
-import fwdpy11.trait_values as fp11tv
 import numpy as np
 import pickle  # to pickle the output
 import lzma    # to compress the pickled file (see fwdpy11 manual0)

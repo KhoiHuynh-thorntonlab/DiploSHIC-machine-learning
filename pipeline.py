@@ -124,7 +124,7 @@ def take_sample(rng, pop):
 
 
 def runsim(args):
-    seed, repid = args
+    mutrate, seed, repid = args
     pop = fp11.SlocusPop(N)
     rng = fp11.GSLrng(seed)
 
@@ -134,9 +134,7 @@ def runsim(args):
          'sregions': [fp11.GaussianS(5, 6, 1, 0.25)],
          'recregions': [fp11.Region(0, 11, 1)],
          # No neutral mutations in this example
-         'mutrate_n':THETA/float(4*N),
-         'mutrate_s': mutrate,
-         'recrate': RHO/float(4*N),
+         'rates':(THETA/float(4*N), mutrate, RHO/float(4*N)),
          'gvalue': gv,
          'prune_selected': False,
          'demography': np.array([N]*20*N, dtype=np.uint32)

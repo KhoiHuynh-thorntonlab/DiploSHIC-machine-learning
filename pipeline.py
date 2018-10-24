@@ -9,7 +9,6 @@ import sqlite3
 import pandas as pd
 import concurrent.futures
 import sys
-import fwdpy11.trait_values as fp11tv
 import numpy as np
 import pickle  # to pickle the output
 import lzma    # to compress the pickled file (see fwdpy11 manual0)
@@ -27,11 +26,9 @@ Key = namedtuple('Key', ['pos', 'esize', 'origin'])
 DBrecord = namedtuple(
     "DBrecord", ['pos', 'esize', 'origin', 'generation', 'count'])
 
-N = 1000
-THETA = 11000.0
-RHO = 11000.0
 
-class Traj(object):
+
+class Traj(args):
     """
     Track the frequency trajectory of all selected variants
     """
@@ -45,7 +42,8 @@ class Traj(object):
         self.data = dict()
 
     def __call__(self, pop):
-        if pop.generation < 10*pop.N and pop.generation % 100 == 0:
+        popu = args
+        if pop.generation < 10*pop.popu and pop.generation % 100 == 0:
             # Remove any extinct variants.
             # This assumes the optimum shift happens at 10N generations.
             # We only care about variants that either "cross" the shift
@@ -81,9 +79,9 @@ class Traj(object):
                     # if the key exists, and the mutation
                     # is not already recored as "fixed",
                     # update the frequency vector
-                    if self.data[k][-1] < 2*pop.N:
+                    if self.data[k][-1] < 2*pop.popu:
                         self.data[k].append(mc[i])
-                elif mc[i] < 2*pop.N:
+                elif mc[i] < 2*pop.popu:
                     # The mutation does not exist,
                     # so we create a frequency vector
                     # with its frequency.
@@ -100,54 +98,63 @@ class Traj(object):
                     # Insert the new record:
                     self.data[k] = [mc[i]]
 
-def take_sample(rng, pop):
-    s = pop.sample(rng, nsam=25)
-    # Convert samples from version 0.2 (neutral, selected) format to (position, genotype)
-    # Then sort the combined samples by position:	
-    neutral, selected = fwdpy11.sampling.matrix_to_sample(s)
-    combined = sorted(neutral + selected, key=lambda x: x[0])
-    ms = libsequence.polytable.SimData(combined)
-    w = libsequence.windows.Windows(ms, window_size=1.0, step_len=0.1,
-                                    starting_pos=0.0, ending_pos=11.0)
 
-    left_end = 0.0
-    samples = []
-    for i in range(len(w)):
-        wi = w[i]
-        newpos = [wi.position(i)-left_end for i in range(wi.numsites())]
-        new_window = libsequence.polytable.SimData(newpos,
-                                                   [wi[i] for i in range(len(wi))])
-        samples.append((left_end, new_window))
+class Sampler(args):
+    def __init__(self,timepoints):
+        self.timepoints=timepoints
+        self.data=[]
+    def take_sample(rng, pop):
+        s = pop.sample(rng, nsam=25)
+    # Convert samples from version 0.2 (neutral, selected) format to (position, genotype)
+    # Then sort the combined samples by position:
+        neutral, selected = fwdpy11.sampling.matrix_to_sample(s)
+        combined = sorted(neutral + selected, key=lambda x: x[0])
+        ms = libsequence.polytable.SimData(combined)
+        w = libsequence.windows.Windows(ms, window_size=1.0, step_len=0.1,starting_pos=0.0, ending_pos=11.0)
+
+        left_end = 0.0
+        samples = []
+        for i in range(len(w)):
+            wi = w[i]
+            newpos = [wi.position(i)-left_end for i in range(wi.numsites())]
+            new_window = libsequence.polytable.SimData(newpos,
+                                                       [wi[i] for i in range(len(wi))])
+            samples.append((left_end, new_window))
         # need to update left_end
         # to get positions correct
-        left_end += 0.1
-    return samples
+            left_end += 0.1
+        return samples
+
+    def __call__(self,pop):
+        popu = args
+        if len(self.timepoints) >10*popu:
+            wbar = take_sample()
+            self.data.append((pop.generation,wbar))
 
 
 def runsim(args):
-    seed, repid = args
-    pop = fp11.SlocusPop(N)
+    mutrate, seed, repid, popu, theta, rho = args
+    pop = fp11.SlocusPop(popu)
     rng = fp11.GSLrng(seed)
 
-    optima = fwdpy11.genetic_values.GSSmo([(0, 0, 1), (10*N, 1, 1)])
+    optima = fwdpy11.genetic_values.GSSmo([(0, 0, 1), (10*popu, 1, 1)])
     gv = fwdpy11.genetic_values.SlocusAdditive(2.0, optima)
     p = {'nregions': [fp11.Region(0,11,1.0)],
          'sregions': [fp11.GaussianS(5, 6, 1, 0.25)],
          'recregions': [fp11.Region(0, 11, 1)],
          # No neutral mutations in this example
-         'mutrate_n':THETA/float(4*N),
-         'mutrate_s': mutrate,
-         'recrate': RHO/float(4*N),
+         'rates':(theta/float(4*popu), mutrate, rho/float(4*popu)),
          'gvalue': gv,
          'prune_selected': False,
-         'demography': np.array([N]*20*N, dtype=np.uint32)
+         'demography': np.array([popu]*20*popu, dtype=np.uint32)
          }
 
+    timepoints= [pop.generation]
+    sam = Sampler(timepoints)
     sampler = Traj()
     params = fp11.model_params.ModelParams(**p)
     fwdpy11.wright_fisher.evolve(rng, pop, params, sampler)
-    samples = take_sample(rng, pop)
-    return sampler.data, repid, pop, samples
+    return sampler.data, repid, pop, sam
 
 
 def make_trajectory_DataFrame(data, repid):
@@ -156,25 +163,21 @@ def make_trajectory_DataFrame(data, repid):
     and coerce it into a DataFrame object
     that we can then write out to an sqlite3
     database.
-
     We want to end up with a data frame with 
     the following columns:
-
     repid generation pos esize origin count
-
     repid = simulation replicate
     generation = generation in the simulation
     pos = mutation position
     esize = effect size
     origin = generation when mutation first arose
     count = number of time the mutation is present in this generation.
-
     Thus, the DataFrame will completely specify the entire mutation
     frequency history for all mutations in the replicate.
     """
     dfdata = []
     for k, v in data.items():
-        if k.origin + len(v) - 1 >= 10*N:
+        if k.origin + len(v) - 1 >= 10*popu:
             # Only keep mutations
             # whose trajectories end after the optimum shift.
             t = [DBrecord(k.pos, k.esize, k.origin, k.origin+j, v[j])
@@ -197,10 +200,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--mutrate", help="mutrate_s", type=float)
     parser.add_argument("-s", "--seed", help="seed", type=int)
-    parser.add_argument(
-        "-n", "--nreps", help="number of replicates", type=int, default=100)
+    parser.add_argument("-n", "--nreps", help="number of replicates", type=int, default=100)
     parser.add_argument("-f", "--filename", help="output_file_name")
-
+    parser.add_argument("-t", "--theta",help="theta value", type=int)
+    parser.add_argument("-r", "--rho",help="rho value", type=int)
+    parser.add_argument("-p", "--popu",help="population value", type=int)
     args = parser.parse_args(sys.argv[1:])
 
     if args.filename is None:
@@ -211,7 +215,13 @@ if __name__ == "__main__":
 
     if args.seed is None:
         raise ValueError("seed not specified")
-    
+    if args.popu is None:
+        raise ValueError("population value not specified")
+    if args.theta is None:
+        raise ValueError("theta value not specified")
+    if args.rho is None:
+        raise ValueError("rho value not specified")    
+
     if args.nreps is None:
         raise ValueError("number of rep not specified")    
 
@@ -241,13 +251,13 @@ if __name__ == "__main__":
             data, repid = fut.result()
             # The output file name here is hard-coded.
             # This is bad, and should be an option.
-            with sqlite3.connect("traj.sqlite3") as conn:
-                df = make_trajectory_DataFrame(data, repid)
+            with sqlite3. connect("traj.sqlite3") as conn:
+                df = make_trajectory_DataFrame(sampler.data, repid)
                 df.to_sql(args.filename+ ".data.txt", conn, if_exists='append',
                           index=False, chunksize=5000)
         for fut in concurrent.futures.as_completed(futures):
             result = fut.result()
-            repid, pop, samples = result
+            repid, pop, sam = result
             print("{} done, {} {}".format(repid, pop.generation, len(samples)))
             with lzma.open(args.filename + '.lzma', "ab") as f:
                 print("pickling")
@@ -255,7 +265,7 @@ if __name__ == "__main__":
                 print("done pickling")
             print("writing samples")
             for i, j in zip(samples, range(len(samples))):
-                with open(args.filename + ".rep{}.window{}.txt".format(repid, j), "w") as f:
+                with open(args.filename + ".rep{}.window{}."+ pop.generation +".txt".format(repid, j), "w") as f:
                     # Write a fake discoal header line with fake random number seeds
                     f.write("discoal 50 1 1000 -t 1000 -r 1000\n1 2 3\n")
                     f.write(str(i[1]))

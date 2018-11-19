@@ -135,15 +135,15 @@ class Sampler(args):
 def runsim(args):
     mutrate, seed, repid, popu, theta, rho = args
     pop = fp11.SlocusPop(popu)
-    rng = fp11.GSLrng(seed)
-
     optima = fwdpy11.genetic_values.GSSmo([(0, 0, 1), (10*popu, 1, 1)])
     gv = fwdpy11.genetic_values.SlocusAdditive(2.0, optima)
     p = {'nregions': [fp11.Region(0,11,1.0)],
          'sregions': [fp11.GaussianS(5, 6, 1, 0.25)],
          'recregions': [fp11.Region(0, 11, 1)],
          # No neutral mutations in this example
+
          'rates':(theta/float(4*popu), mutrate, rho/float(4*popu)),
+
          'gvalue': gv,
          'prune_selected': False,
          'demography': np.array([popu]*20*popu, dtype=np.uint32)

@@ -1,5 +1,0 @@
-quick_test_parallel.sh is used to create training discoal and model file
-simsample_parallel.sh is used to create simulation data. 
-simvec.sh is used to generate feature vector / add fake column with stat.txt/ and use for prediction. 
-stat.txt contains four fake column need for feature vector
-countoccurence.sh is used to count the occurent of classified class 

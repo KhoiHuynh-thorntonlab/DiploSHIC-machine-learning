@@ -2,7 +2,7 @@
 
 ## simulation_withtimeserial.py:
 
-uses to simulate population with population pickled at each timepoint from fwdpy11 v 0.2
+uses to simulate population with population pickled at each timepoint from fwdpy11 v 0.2. Theta/rho in used is 11000 as we have hypothetical windows go from 0 to 11 in units while model simulations only go from 0-1 units. 
 
 ## final_sampling.py
 
@@ -20,3 +20,6 @@ This script is used to make predictions by diploSHIC for resulted files from con
 
 This script is used to record genetic value of each replicate for each timepoint. Then, all genetic value from the sample time point is averaged using R.
 
+## Parallel_generation_of_model.sh
+
+This is used to generate three prediction models with theta/rho = 1000 for each simulation with discoal. Alpha value is changing with 25_250/ 250_2500/2500_25000 using -Pa option. 

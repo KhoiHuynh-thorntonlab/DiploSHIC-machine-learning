@@ -84,7 +84,3 @@ python3 /home/khoih/diploSHIC/diploSHIC.py makeTrainingSets /home/khoih/dis/neut
     
 python3 /home/khoih/diploSHIC/diploSHIC.py train /home/khoih/dis/training_out/ /home/khoih/dis/training_out/ /home/khoih/dis/modelfile.txt
 
-# As of Aug 22, things work for KRT up until now.
-
-# Attempting to get a real data set analyzed is failing for me.
-# My attempt is:

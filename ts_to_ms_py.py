@@ -110,5 +110,13 @@ def process_replicate(filename, repid, seed, nsam):
 if __name__ == "__main__":
     parser = make_parser()
     args = parser.parse_args(sys.argv[1:])
-
+    if args.filename is None:
+        raise ValueError("output file name (filename) not specified")
+    if args.nsam is None:
+        raise ValueError("number of sample (nsam) not specified")
+    if args.theta is None:
+        raise ValueError("theta value (theta) not specified")
+    if args.seed is None:
+        raise ValueError("seed for rng (seed) not specified")
+    
     process_replicate(args.filename, 1, args.seed, args.nsam)

@@ -13,12 +13,24 @@ def make_parser():
     parser = argparse.ArgumentParser()
 
     # TODO: Khoi: add the help lines for these
-    parser.add_argument('filename', type=str)
-    parser.add_argument('theta', type=float)
-    parser.add_argument('nsam', type=int)
-    parser.add_argument('seed', type=int)
+    parser.add_argument('filename', type=str, defaults=None, help = "inputfilename. Simulated population is pickled to this file")
+    # I keep theta default at 1000 as it is the default we normally used. 
+    parser.add_argument('theta', type=float, default=1000.0 help="Scaled mutation rate, theta=4Nu")
+    parser.add_argument('nsam', type=int,help="number of sampled individuals")
+    parser.add_argument('seed', type=int, help="random number seed")
 
     return parser
+
+
+def validate_arguments(args):
+    if args.filename is None:
+        raise ValueError("input file name (filename) not specified")
+    if args.nsam is None:
+        raise ValueError("number of sample (nsam) not specified")
+    if args.theta is None:
+        raise ValueError("theta value (theta) not specified")
+    if args.seed is None:
+        raise ValueError("seed for rng (seed) not specified")
 
 
 def reformat_data(window_data, pos_window):
@@ -60,21 +72,24 @@ def write_ms_format(data, pos, outfile_stub, window_size=1, step_size=0.5):
 
 def process_replicate(filename, repid, seed, nsam):
 
+### Open simulated population :   
     with gzip.open(filename, 'rb') as f:
         pop = fwdpy11.SlocusPop.load_from_pickle_file(f)
+
+### RNG seed generation :
 
     rng = fwdpy11.GSLrng(seed)
     np.random.seed(seed)
 
-    # Add neutral mutations
+# Add neutral mutations
     nm = fwdpy11.ts.infinite_sites(
         rng, pop, float(NLOCI) * args.theta / (4 * pop.N))
 
-    # Get the node table for the pop and the
-    # metadata for ancient samples
+# Get the node table for the pop and the
+# metadata for ancient samples
     nodes = np.array(pop.tables.nodes, copy=False)
     amd = np.array(pop.ancient_sample_metadata, copy=False)
-    # These are the times for each ancient sample
+# These are the times for each ancient sample
     amt = nodes['time'][amd['nodes'][:, 0]]
 
     for t in np.unique(amt):
@@ -110,13 +125,6 @@ def process_replicate(filename, repid, seed, nsam):
 if __name__ == "__main__":
     parser = make_parser()
     args = parser.parse_args(sys.argv[1:])
-    if args.filename is None:
-        raise ValueError("output file name (filename) not specified")
-    if args.nsam is None:
-        raise ValueError("number of sample (nsam) not specified")
-    if args.theta is None:
-        raise ValueError("theta value (theta) not specified")
-    if args.seed is None:
-        raise ValueError("seed for rng (seed) not specified")
+    validate_arguments(args)
     
     process_replicate(args.filename, 1, args.seed, args.nsam)

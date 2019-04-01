@@ -107,6 +107,7 @@ def process_replicate(filename, repid, seed, nsam):
         vg = amd['g'][sample_indexes_at_time].var()
         wbar = amd['w'][sample_indexes_at_time].mean()
 
+        # randomly choose entries that has index classfied by sample_indexes_at_time and condition amt==t
         random_sample = np.random.choice(
             sample_indexes_at_time, nsam, replace=False)
         samples = amd['nodes'][random_sample].flatten()
@@ -123,6 +124,7 @@ def process_replicate(filename, repid, seed, nsam):
         # Re-order the matrix by the sorted positions
         all_sites = all_sites[sorted_pos_indexes, :]
         pos = pos[sorted_pos_indexes]
+        # convert sample to ms format with write_ms_format function
         write_ms_format(all_sites, pos, "foo", 1, 0.5)
 
 

@@ -66,7 +66,7 @@ def write_ms_format(data, pos, outfile_stub, window_size=1, step_size=0.5):
             window_data = data[window_data_indexes, :]
             ms = reformat_data(window_data, pos_window)
             print(ms)
-            with open("foo", "w") as f:
+            with open(outfile_stub +".msdata.txt", "w") as f:
                 f.write(ms)
 
 
@@ -76,7 +76,7 @@ def process_replicate(filename, repid, seed, nsam):
     with gzip.open(filename, 'rb') as f:
         pop = fwdpy11.SlocusPop.load_from_pickle_file(f)
 
-### RNG seed generation :
+### RNG seed generation 
 
     rng = fwdpy11.GSLrng(seed)
     np.random.seed(seed)
@@ -125,12 +125,11 @@ def process_replicate(filename, repid, seed, nsam):
         all_sites = all_sites[sorted_pos_indexes, :]
         pos = pos[sorted_pos_indexes]
         # convert sample to ms format with write_ms_format function
-        write_ms_format(all_sites, pos, "foo", 1, 0.5)
+        write_ms_format(all_sites, pos, filename, 1, 0.5)
 
 
 if __name__ == "__main__":
     parser = make_parser()
     args = parser.parse_args(sys.argv[1:])
     validate_arguments(args)
-    
     process_replicate(args.filename, 1, args.seed, args.nsam)

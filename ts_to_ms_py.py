@@ -90,15 +90,19 @@ def process_replicate(filename, repid, seed, nsam):
     nodes = np.array(pop.tables.nodes, copy=False)
     amd = np.array(pop.ancient_sample_metadata, copy=False)
 # These are the times for each ancient sample
+# set amt as timepoint from time element from ancient sample metadata in node table:
     amt = nodes['time'][amd['nodes'][:, 0]]
 
     for t in np.unique(amt):
         # Get the indexes of the metadata corresponding
         # to this time point
+        # np.where rereturn indexes of entries that satisfy amt == t
         sample_indexes_at_time = np.where(amt == t)[0]
 
         # Calc some simple stats about the overall pop'n
         # You can figure out where to record these.
+        # retrieve mean trait value g from ancient metadata from node table with index
+        # specified by amt (timepoint) 
         mean_trait_value = amd['g'][sample_indexes_at_time].mean()
         vg = amd['g'][sample_indexes_at_time].var()
         wbar = amd['w'][sample_indexes_at_time].mean()

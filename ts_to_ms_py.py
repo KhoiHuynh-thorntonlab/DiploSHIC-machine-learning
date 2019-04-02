@@ -58,13 +58,27 @@ def reformat_data(window_data, pos_window):
 
 # write ms format to file:
 def write_ms_format(data, pos, outfile_stub, window_size=1, step_size=0.5):
+    # locus is counter and start_stop is object retrieve from locus_boundaries.
+    # enumerate is to number object in locus bounderies list. Said number
+    # is locus.
     for locus, start_stop in enumerate(LOCUS_BOUNDARIES):
+        # np.arrange generate number from the first value from
+        # start_stop[0] to last value start_stop[1] with increasing step
+        # size as step_size. 
         window_starts = np.arange(start_stop[0], start_stop[1], step_size)
         for window, ws in enumerate(window_starts):
+            # window_data_indexes gnerate index for all entires
+            # that has position bigger than window value from wind_start
+            # and smaller than window value + window_size. 
+            #[0] just to get the first column of generated index.
             window_data_indexes = np.where(
                 (pos >= ws) & (pos < ws + window_size))[0]
             pos_window = pos[window_data_indexes]
+            # for all data with window_data_indexes, take all 
+            # column
             window_data = data[window_data_indexes, :]
+            # convert data into ms format using
+            # reformat_data function
             ms = reformat_data(window_data, pos_window)
             print(ms)
             with open("foo", "w") as f:

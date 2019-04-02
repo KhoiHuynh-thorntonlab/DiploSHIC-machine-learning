@@ -5,22 +5,24 @@ import argparse
 import sys
 import numpy as np
 
+
+# set number of loci and locus boundary:
 NLOCI = 10
 LOCUS_BOUNDARIES = [(i, i + 11) for i in range(0, NLOCI * 11, 11)]
 
+# creat parser for command line argument for the script variable:
 
 def make_parser():
     parser = argparse.ArgumentParser()
-
     # TODO: Khoi: add the help lines for these
     parser.add_argument('filename', type=str)
     parser.add_argument('theta', type=float)
     parser.add_argument('nsam', type=int)
     parser.add_argument('seed', type=int)
-
     return parser
 
-
+# this is to reformat data from tree sequence sample data to a 
+# MS format data 
 def reformat_data(window_data, pos_window):
     ms = "1 2 3\n//\nsegsites: {}\n".format(len(pos_window))
 
@@ -43,7 +45,7 @@ def reformat_data(window_data, pos_window):
 
     return ms
 
-
+# write ms format to file:
 def write_ms_format(data, pos, outfile_stub, window_size=1, step_size=0.5):
     for locus, start_stop in enumerate(LOCUS_BOUNDARIES):
         window_starts = np.arange(start_stop[0], start_stop[1], step_size)

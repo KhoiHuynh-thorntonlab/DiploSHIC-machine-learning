@@ -13,11 +13,11 @@ def make_parser():
     parser = argparse.ArgumentParser()
 
     # TODO: Khoi: add the help lines for these
-    parser.add_argument('filename', type=str, defaults=None, help = "inputfilename. Simulated population is pickled to this file")
-    # I keep theta default at 1000 as it is the default we normally used. 
-    parser.add_argument('theta', type=float, default=1000.0 help="Scaled mutation rate, theta=4Nu")
-    parser.add_argument('nsam', type=int,help="number of sampled individuals")
-    parser.add_argument('seed', type=int, help="random number seed")
+    parser.add_argument('-filename','--filename', type=str, help = "inputfilename. Simulated population is pickled to this file")
+    # I keep theta default at 1000 as it is the default we normally used.
+    parser.add_argument('-theta','--theta', type=float, help="Scaled mutation rate, theta=4Nu")
+    parser.add_argument('-nsam','--nsam', type=int,help="number of sampled individuals")
+    parser.add_argument('-seed','--seed', type=int, help="random number seed")
 
     return parser
 
@@ -56,7 +56,7 @@ def reformat_data(window_data, pos_window):
     return ms
 
 
-def write_ms_format(data, pos, outfile_stub, window_size=1, step_size=0.5):
+def write_ms_format(data, timepoint, pos, outfile_stub, window_size=1, step_size=0.5):
     for locus, start_stop in enumerate(LOCUS_BOUNDARIES):
         window_starts = np.arange(start_stop[0], start_stop[1], step_size)
         for window, ws in enumerate(window_starts):
@@ -65,23 +65,30 @@ def write_ms_format(data, pos, outfile_stub, window_size=1, step_size=0.5):
             pos_window = pos[window_data_indexes]
             window_data = data[window_data_indexes, :]
             ms = reformat_data(window_data, pos_window)
+            np.set_printoptions(threshold=sys.maxsize)
             print(ms)
-            with open(outfile_stub +".msdata.txt", "w") as f:
+            with open(outfile_stub+".window"+ str(window)+".timepoint" +str(timepoint)+".msdata.txt", "w") as f:
                 f.write(ms)
-
+def write_metadata(t,mean_trait,genetic_value,mean_fitness,outfile_stub):
+    with open(outfile_stub+".metadata.txt","a") as f:
+        f.write(str(t)+"\t"+str(mean_trait)+"\t"+str(genetic_value)+"\t"+str(mean_fitness)+"\n")
 
 def process_replicate(filename, repid, seed, nsam):
 
-### Open simulated population :   
-    with gzip.open(filename, 'rb') as f:
+### Open simulated population :
+    with gzip.open(filename +".gz", 'rb') as f:
         pop = fwdpy11.SlocusPop.load_from_pickle_file(f)
 
-### RNG seed generation 
+### RNG seed generation
 
     rng = fwdpy11.GSLrng(seed)
     np.random.seed(seed)
 
 # Add neutral mutations
+# since tree sequence simulation do not
+# involve neutral mutation. it only
+# simulate selected mutation.
+
     nm = fwdpy11.ts.infinite_sites(
         rng, pop, float(NLOCI) * args.theta / (4 * pop.N))
 
@@ -90,9 +97,9 @@ def process_replicate(filename, repid, seed, nsam):
     nodes = np.array(pop.tables.nodes, copy=False)
     amd = np.array(pop.ancient_sample_metadata, copy=False)
 # These are the times for each ancient sample
-# set amt as timepoint from time element from ancient sample metadata in node table:
+# amt is time element from ancient sample metadata in node table:
     amt = nodes['time'][amd['nodes'][:, 0]]
-
+# t is the timepoint of the sample
     for t in np.unique(amt):
         # Get the indexes of the metadata corresponding
         # to this time point
@@ -102,7 +109,7 @@ def process_replicate(filename, repid, seed, nsam):
         # Calc some simple stats about the overall pop'n
         # You can figure out where to record these.
         # retrieve mean trait value g from ancient metadata from node table with index
-        # specified by amt (timepoint) 
+        # specified by amt (timepoint)
         mean_trait_value = amd['g'][sample_indexes_at_time].mean()
         vg = amd['g'][sample_indexes_at_time].var()
         wbar = amd['w'][sample_indexes_at_time].mean()
@@ -125,11 +132,14 @@ def process_replicate(filename, repid, seed, nsam):
         all_sites = all_sites[sorted_pos_indexes, :]
         pos = pos[sorted_pos_indexes]
         # convert sample to ms format with write_ms_format function
-        write_ms_format(all_sites, pos, filename, 1, 0.5)
-
+        write_ms_format(all_sites,t, pos, filename, 1, 0.5)
+        write_metadata(t,mean_trait_value,vg,wbar,filename)
 
 if __name__ == "__main__":
     parser = make_parser()
     args = parser.parse_args(sys.argv[1:])
     validate_arguments(args)
+    with open(args.filename+".metadata.txt","w") as f:
+        f.write("timepoint"+"\t"+"mean_trait"+"\t"+"genetic_value"+"\t"+"mean_fitness"+"\n")
     process_replicate(args.filename, 1, args.seed, args.nsam)
+

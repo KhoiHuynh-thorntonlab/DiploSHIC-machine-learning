@@ -15,11 +15,24 @@ LOCUS_BOUNDARIES = [(i, i + 11) for i in range(0, NLOCI * 11, 11)]
 def make_parser():
     parser = argparse.ArgumentParser()
     # TODO: Khoi: add the help lines for these
-    parser.add_argument('filename', type=str)
-    parser.add_argument('theta', type=float)
-    parser.add_argument('nsam', type=int)
-    parser.add_argument('seed', type=int)
+    parser.add_argument('-filename','--filename', type=str, help = "inputfilename. Simulated population is pickled to this file")
+    parser.add_argument('-theta','--theta', type=float, help="Scaled mutation rate, theta=4Nu")
+    parser.add_argument('-nsam','--nsam', type=int,help="number of sampled individuals")
+    parser.add_argument('-seed','--seed', type=int, help="random number seed")
     return parser
+
+# this function to validate argument 
+# input
+def validate_arguments(args):
+    if args.filename is None:
+        raise ValueError("input file name (filename) not specified")
+    if args.nsam is None:
+        raise ValueError("number of sample (nsam) not specified")
+    if args.theta is None:
+        raise ValueError("theta value (theta) not specified")
+    if args.seed is None:
+        raise ValueError("seed for rng (seed) not specified")
+
 
 # this is to reformat data from tree sequence sample data to a 
 # MS format data 
@@ -45,7 +58,8 @@ def reformat_data(window_data, pos_window):
         # with seperator (delimiter) set as '' to have no space.
         # then that array is converted into string via array2string
         # which is further classified as string with str. 
-        temp = str(np.array2string(window_data[:, i], separator=''))[1:-1]
+        # max_line_width set numpy printing threshold for line to double wind_data shape size
+        temp = str(np.array2string(window_data[:, i], separator='',max_line_width=2 * window_data.shape[0]))[1:-1]
         # NOTE: the next two lines are due to annoyances
         # with np.array2string!!!!!
         # replace any new line and space with no space via ''
@@ -57,7 +71,7 @@ def reformat_data(window_data, pos_window):
     return ms
 
 # write ms format to file:
-def write_ms_format(data, pos, outfile_stub, window_size=1, step_size=0.5):
+def write_ms_format(data,timepoint, pos, outfile_stub, window_size=1, step_size=0.5):
     # locus is counter and start_stop is object retrieve from locus_boundaries.
     # enumerate is to number object in locus bounderies list. Said number
     # is locus.
@@ -81,7 +95,7 @@ def write_ms_format(data, pos, outfile_stub, window_size=1, step_size=0.5):
             # reformat_data function
             ms = reformat_data(window_data, pos_window)
             print(ms)
-            with open("foo", "w") as f:
+            with open(outfile_stub+".window"+ str(window)+".timepoint" +str(timepoint)+".msdata.txt", "w") as f:
                 f.write(ms)
 
 
@@ -131,11 +145,13 @@ def process_replicate(filename, repid, seed, nsam):
         # Re-order the matrix by the sorted positions
         all_sites = all_sites[sorted_pos_indexes, :]
         pos = pos[sorted_pos_indexes]
-        write_ms_format(all_sites, pos, "foo", 1, 0.5)
-
+        write_ms_format(all_sites,t, pos, filename, 1, 0.5)
+        write_metadata(t,mean_trait_value,vg,wbar,filename)
 
 if __name__ == "__main__":
     parser = make_parser()
     args = parser.parse_args(sys.argv[1:])
-
+    validate_arguments(args)
+    with open(args.filename+".metadata.txt","w") as f:
+        f.write("timepoint"+"\t"+"mean_trait"+"\t"+"genetic_value"+"\t"+"mean_fitness"+"\n")
     process_replicate(args.filename, 1, args.seed, args.nsam)

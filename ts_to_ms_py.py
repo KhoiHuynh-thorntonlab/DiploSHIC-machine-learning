@@ -135,20 +135,26 @@ def process_replicate(filename, repid, seed, nsam):
         vg = amd['g'][sample_indexes_at_time].var()
         # calculate mean fitness value w with .mean()
         wbar = amd['w'][sample_indexes_at_time].mean()
-
+        # choose random choice:
         random_sample = np.random.choice(
             sample_indexes_at_time, nsam, replace=False)
+        # flatten sample array
         samples = amd['nodes'][random_sample].flatten()
+        # simplfy tree sequence array sample into tuple
         tables, idmap = fwdpy11.ts.simplify(pop, samples)
-
+        # create data matrix from data table
         gm = fwdpy11.ts.data_matrix_from_tables(
             tables, pop.mutations, idmap[samples], True, True)
+        # create array for position from neutral and selected position
         pos = np.array(gm.neutral.positions + gm.selected.positions)
         sorted_pos_indexes = np.argsort(pos)
+        # input data from neutral and create array
         all_sites = np.array(gm.neutral, copy=False)
         if len(gm.selected.positions) > 0:
+            # concatenate neutral and selected data
             all_sites = np.concatenate(
                 (all_sites, np.array(gm.selected, copy=False)))
+        # take all data according to sorted_pos_indexes
         # Re-order the matrix by the sorted positions
         all_sites = all_sites[sorted_pos_indexes, :]
         pos = pos[sorted_pos_indexes]

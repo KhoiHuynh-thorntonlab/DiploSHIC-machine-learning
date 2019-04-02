@@ -98,7 +98,10 @@ def write_ms_format(data,timepoint, pos, outfile_stub, window_size=1, step_size=
             with open(outfile_stub+".window"+ str(window)+".timepoint" +str(timepoint)+".msdata.txt", "w") as f:
                 f.write(ms)
 
-
+def write_metadata(t,mean_trait,genetic_variance,mean_fitness,outfile_stub):
+    with open(outfile_stub+".metadata.txt","a") as f:
+        f.write(str(t)+"\t"+str(mean_trait)+"\t"+str(genetic_variance)+"\t"+str(mean_fitness)+"\n")                
+                
 def process_replicate(filename, repid, seed, nsam):
 
     with gzip.open(filename, 'rb') as f:
@@ -125,8 +128,12 @@ def process_replicate(filename, repid, seed, nsam):
 
         # Calc some simple stats about the overall pop'n
         # You can figure out where to record these.
+        # calculate mean genetic value for sample with
+        # sample_indexes_at_time index by .mean()
         mean_trait_value = amd['g'][sample_indexes_at_time].mean()
+        # calulate genetic variance for all sample by .var()
         vg = amd['g'][sample_indexes_at_time].var()
+        # calculate mean fitness value w with .mean()
         wbar = amd['w'][sample_indexes_at_time].mean()
 
         random_sample = np.random.choice(
@@ -153,5 +160,5 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
     validate_arguments(args)
     with open(args.filename+".metadata.txt","w") as f:
-        f.write("timepoint"+"\t"+"mean_trait"+"\t"+"genetic_value"+"\t"+"mean_fitness"+"\n")
+        f.write("timepoint"+"\t"+"mean_trait"+"\t"+"genetic_variance"+"\t"+"mean_fitness"+"\n")
     process_replicate(args.filename, 1, args.seed, args.nsam)

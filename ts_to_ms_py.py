@@ -24,6 +24,11 @@ def make_parser():
 # this is to reformat data from tree sequence sample data to a 
 # MS format data 
 def reformat_data(window_data, pos_window):
+    
+# this line is str.format() that return value in format() into 
+# str {}.
+# our script create a line of 1 2 3
+# follows by nsetsites with position window parsing in to {}
     ms = "1 2 3\n//\nsegsites: {}\n".format(len(pos_window))
 
     if len(pos_window) == 0:
@@ -36,11 +41,17 @@ def reformat_data(window_data, pos_window):
     ms = ms + "\n"
 
     for i in range(window_data.shape[1]):
+        #window_data[:,i] spliced window_data array and keep only i column
+        # with seperator (delimiter) set as '' to have no space.
+        # then that array is converted into string via array2string
+        # which is further classified as string with str. 
         temp = str(np.array2string(window_data[:, i], separator=''))[1:-1]
         # NOTE: the next two lines are due to annoyances
         # with np.array2string!!!!!
+        # replace any new line and space with no space via ''
         temp = temp.replace('\n', '')
         temp = temp.replace(' ', '')
+        # input temp as new line after ms
         ms = ms + "{}\n".format(temp)
 
     return ms

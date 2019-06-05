@@ -154,10 +154,7 @@ def process_replicate(filename, repid, seed, nsam):
 	# directly to the file but it won't allow me to
 	# unless I do something like this
         pos = np.array(gm.neutral.positions)
-        sorted_pos_indexes = np.argsort(pos)
         all_sites = np.array(gm.neutral,copy=False)
-        all_sites = all_sites[sorted_pos_indexes, :]
-        pos = pos[sorted_pos_indexes]
         write_ms_format(all_sites,t,pos, filename, 1, 0.5)
         # pos = np.array(gm.neutral.positions + gm.selected.positions)
         # sorted_pos_indexes = np.argsort(pos)
